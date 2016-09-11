@@ -114,3 +114,86 @@ public class EditTextDisablePaste extends EditText {
     }
 }
 ```
+其中判断手机UI系统的主要代码如下，这里以oppo手机为例：
+```java
+package com.me.app.edittextdemo.util;
+
+import android.os.Environment;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+public class OSUtil {
+    private static final String KEY_COLOROS_VERSION_NAME= "ro.build.version.opporom";
+
+    private BuildProperties prop ;
+
+    private static OSUtil instance = null;
+
+    private OSUtil() throws IOException {
+        prop = BuildProperties.newInstance();
+    }
+    
+    public static OSUtil getInstance() throws IOException {
+        if (instance == null) {
+            synchronized (OSUtil.class) {
+                if (instance == null){
+                    instance = new OSUtil();
+                }
+            }
+        }
+        return instance;
+    }
+
+    private boolean isPropertiesExist(String... keys) {
+            for (String key : keys) {
+                String str = prop.getProperty(key);
+                if (str == null)
+                    return false;
+            }
+            return true;
+    }
+
+    private String getProperty(String key) {
+            return prop.getProperty(key);
+    }
+
+    /**
+     * oppo
+     * @return
+     */
+    public boolean isColorOS() {
+        return isPropertiesExist(KEY_COLOROS_VERSION_NAME);
+    }
+
+
+    public String getUIVersion(){
+        if (isColorOS()){
+            return "ColorOS "+getProperty(KEY_COLOROS_VERSION_NAME);
+        }
+        return null;
+    }
+
+    private static class BuildProperties {
+
+        private final Properties properties;
+
+        private BuildProperties() throws IOException {
+            properties = new Properties();
+            FileInputStream file = new FileInputStream(new File(Environment.getRootDirectory(), "build.prop"));
+            properties.load(file);
+            file.close();
+        }
+
+        public String getProperty(final String name) {
+            return properties.getProperty(name);
+        }
+
+        public static BuildProperties newInstance() throws IOException {
+            return new BuildProperties();
+        }
+    }
+}
+```
